@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block page_title %}Hapus Karyawan{% endblock %}
+{% block topbar_title %}Hapus Karyawan{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto mt-10">
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+    <div class="w-16 h-16 rounded-full bg-red-50 border-2 border-red-100 flex items-center justify-center mx-auto mb-5">
+      <svg class="w-8 h-8 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
+    </div>
+    <h2 class="text-xl font-extrabold text-red-600 mb-2">Hapus Karyawan?</h2>
+    <p class="text-gray-500 text-sm leading-relaxed mb-1">
+      Anda yakin ingin menghapus karyawan<br>
+      <strong class="text-gray-800">{{ employee.nama }}</strong> ({{ employee.nomor_karyawan }})?
+    </p>
+    <p class="text-red-500 text-xs font-semibold mb-6">Semua data absensi terkait juga akan terhapus permanen.</p>
+
+    <div class="flex gap-3 justify-center">
+      <form method="post">
+        {% csrf_token %}
+        <button type="submit"
+                class="flex items-center gap-2 bg-red-500 hover:bg-red-600 active:scale-95 text-white text-sm font-bold px-6 py-3 rounded-xl transition-all shadow-sm shadow-red-200">
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
+          Ya, Hapus
+        </button>
+      </form>
+      <a href="{% url 'employee_list' %}" class="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold px-6 py-3 rounded-xl transition-colors">
+        Batal
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

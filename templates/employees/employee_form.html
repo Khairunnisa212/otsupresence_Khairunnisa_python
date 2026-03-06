@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block page_title %}{{ action }} Karyawan{% endblock %}
+{% block topbar_title %}{{ action }} Karyawan{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-5">
+  <div>
+    <h1 class="text-xl font-extrabold text-gray-900 tracking-tight">{{ action }} Karyawan</h1>
+    <p class="text-sm text-gray-400 mt-0.5">
+      <a href="{% url 'employee_list' %}" class="text-brand-700 hover:underline">Data Karyawan</a> → {{ action }}
+    </p>
+  </div>
+  <a href="{% url 'employee_list' %}"
+     class="flex items-center gap-2 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 px-4 py-2.5 rounded-xl transition-colors">
+    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+    Kembali
+  </a>
+</div>
+
+<div class="max-w-2xl mx-auto">
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="flex items-center gap-3 px-5 py-4 border-b border-gray-100 bg-gray-50">
+      <div class="w-8 h-8 rounded-xl bg-brand-700 flex items-center justify-center flex-shrink-0">
+        <svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>
+      </div>
+      <span class="font-bold text-gray-800">Informasi Karyawan</span>
+    </div>
+
+    <div class="p-5">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+          <div>
+            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5">Nama Lengkap *</label>
+            {{ form.nama }}
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5">Email *</label>
+            {{ form.email }}
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5">Jabatan *</label>
+            {{ form.jabatan }}
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5">Departemen</label>
+            {{ form.departemen }}
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5">Tanggal Masuk *</label>
+            {{ form.tanggal_masuk }}
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5">Status</label>
+            {{ form.status_aktif }}
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5">Nomor Telepon</label>
+            {{ form.telepon }}
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5">Foto Karyawan</label>
+            {{ form.foto }}
+          </div>
+
+        </div>
+
+        {% if action == 'Tambah' %}
+        <div class="mt-5 bg-brand-50 border border-brand-100 rounded-2xl p-4">
+          <div class="flex items-center gap-3 mb-3">
+            {{ form.create_account }}
+            <label for="{{ form.create_account.id_for_label }}"
+                   class="text-sm font-bold text-brand-700 cursor-pointer">
+              Buat akun login untuk karyawan ini
+            </label>
+          </div>
+          <div id="account-fields" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5">Username</label>
+              {{ form.username }}
+              <p class="text-xs text-gray-400 mt-1">Kosongkan untuk otomatis dari email</p>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5">Password</label>
+              {{ form.password }}
+              <p class="text-xs text-gray-400 mt-1">Default: karyawan123</p>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if form.errors %}
+        <div class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3 mt-4">
+          <svg class="w-5 h-5 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
+          <div>{% for field in form %}{% for err in field.errors %}<div>{{ field.label }}: {{ err }}</div>{% endfor %}{% endfor %}{% for err in form.non_field_errors %}<div>{{ err }}</div>{% endfor %}</div>
+        </div>
+        {% endif %}
+
+        <div class="flex gap-3 mt-5">
+          <button type="submit"
+                  class="flex items-center gap-2 bg-brand-700 hover:bg-brand-600 text-white text-sm font-bold px-6 py-3 rounded-xl transition-colors shadow-sm">
+            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+            Simpan Karyawan
+          </button>
+          <a href="{% url 'employee_list' %}" class="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold px-5 py-3 rounded-xl transition-colors">Batal</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+// Toggle account fields
+const cb = document.getElementById('{{ form.create_account.id_for_label }}');
+const af = document.getElementById('account-fields');
+if (cb && af) {
+  af.style.display = cb.checked ? 'grid' : 'none';
+  cb.addEventListener('change', () => { af.style.display = cb.checked ? 'grid' : 'none'; });
+}
+// Style Django widgets with Tailwind classes
+document.querySelectorAll('input[type=text],input[type=email],input[type=date],input[type=password],input[type=tel],select,textarea').forEach(el => {
+  if (el.type === 'checkbox') return;
+  el.classList.add('w-full','bg-gray-100','border-0','rounded-xl','px-3','py-2.5','text-sm','text-gray-800','outline-none',
+                   'focus:ring-2','focus:ring-brand-700','focus:bg-white','transition-all');
+});
+</script>
+{% endblock %}

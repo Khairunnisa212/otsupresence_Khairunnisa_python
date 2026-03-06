@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% block page_title %}Laporan Absensi{% endblock %}
+{% block topbar_title %}Laporan Absensi{% endblock %}
+{% block content %}
+
+<div class="flex items-start justify-between mb-5 flex-wrap gap-3">
+  <div>
+    <h1 class="text-xl font-extrabold text-gray-900 tracking-tight">Laporan Absensi</h1>
+    <p class="text-gray-400 text-sm mt-0.5">Rekap kehadiran bulanan</p>
+  </div>
+  {% if is_admin %}
+  <div class="flex gap-2 flex-wrap">
+    <a href="{% url 'export_attendance_excel' %}?year={{ year }}&month={{ month }}" class="flex items-center gap-1.5 text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 text-xs font-bold px-3 py-2 rounded-xl transition-colors">
+      <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg> Excel
+    </a>
+    <a href="{% url 'export_attendance_csv' %}?year={{ year }}&month={{ month }}" class="flex items-center gap-1.5 text-cyan-700 bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 text-xs font-bold px-3 py-2 rounded-xl transition-colors">
+      <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg> CSV
+    </a>
+    <a href="{% url 'export_attendance_pdf' %}?year={{ year }}&month={{ month }}" class="flex items-center gap-1.5 text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 text-xs font-bold px-3 py-2 rounded-xl transition-colors">
+      <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg> PDF
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Filter -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4">
+  <form method="get">
+    <div class="flex flex-wrap gap-3 items-end">
+      <div>
+        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Tahun</label>
+        <select name="year" class="bg-gray-100 text-sm text-gray-700 rounded-xl px-3 py-2.5 outline-none border-0">
+          {% for y in years %}<option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Bulan</label>
+        <select name="month" class="bg-gray-100 text-sm text-gray-700 rounded-xl px-3 py-2.5 outline-none border-0">
+          {% for m_num, m_name in months %}<option value="{{ m_num }}" {% if m_num == month %}selected{% endif %}>{{ m_name }}</option>{% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="bg-brand-700 hover:bg-brand-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors">Tampilkan</button>
+    </div>
+  </form>
+</div>
+
+{% if is_admin %}
+<!-- Admin: summary table -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+  <div class="flex items-center gap-3 px-5 py-4 border-b border-gray-100 bg-gray-50">
+    <svg class="w-5 h-5 text-brand-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+    <span class="font-bold text-gray-800">Rekap — Bulan {{ month }}/{{ year }}</span>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[520px]">
+      <thead>
+        <tr class="border-b border-gray-100">
+          <th class="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-5 py-3 bg-gray-50">Karyawan</th>
+          <th class="text-center text-xs font-bold text-gray-400 uppercase tracking-wider px-4 py-3 bg-gray-50">Total</th>
+          <th class="text-center text-xs font-bold text-gray-400 uppercase tracking-wider px-4 py-3 bg-gray-50">Tepat Waktu</th>
+          <th class="text-center text-xs font-bold text-gray-400 uppercase tracking-wider px-4 py-3 bg-gray-50">Terlambat</th>
+          <th class="text-center text-xs font-bold text-gray-400 uppercase tracking-wider px-4 py-3 bg-gray-50">Persentase</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        {% for data in report_data %}
+        <tr class="transition-colors">
+          <td class="px-5 py-3.5">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-700 to-brand-500 flex items-center justify-center text-white font-bold text-xs flex-shrink-0 overflow-hidden">
+                {% if data.employee.foto %}<img src="{{ data.employee.foto.url }}" class="w-full h-full object-cover" alt="">{% else %}{{ data.employee.nama|first|upper }}{% endif %}
+              </div>
+              <div>
+                <div class="font-bold text-gray-800 text-sm">{{ data.employee.nama }}</div>
+                <div class="text-xs text-gray-400">{{ data.employee.jabatan }}</div>
+              </div>
+            </div>
+          </td>
+          <td class="px-4 py-3.5 text-center">
+            <span class="text-xl font-black text-brand-700">{{ data.total }}</span>
+          </td>
+          <td class="px-4 py-3.5 text-center">
+            <span class="inline-flex items-center gap-1 bg-green-50 text-green-700 border border-green-200 text-xs font-bold px-2.5 py-1 rounded-full">{{ data.hadir }}</span>
+          </td>
+          <td class="px-4 py-3.5 text-center">
+            <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200 text-xs font-bold px-2.5 py-1 rounded-full">{{ data.terlambat }}</span>
+          </td>
+          <td class="px-4 py-3.5 text-center text-sm font-bold text-gray-700">
+            {% if data.total > 0 %}{% widthratio data.hadir data.total 100 %}%{% else %}0%{% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-center py-12 text-gray-400">
+          <div class="text-3xl mb-2">📊</div>
+          <div class="text-sm font-medium">Tidak ada data untuk periode ini</div>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% else %}
+<!-- Employee: stat cards + detail -->
+{% for data in report_data %}
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
+    <div class="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center flex-shrink-0">
+      <svg class="w-5 h-5 text-brand-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg>
+    </div>
+    <div><div class="text-2xl font-black text-gray-900">{{ data.total }}</div><div class="text-xs text-gray-400 font-semibold">Total Hadir</div></div>
+  </div>
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
+    <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
+      <svg class="w-5 h-5 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+    </div>
+    <div><div class="text-2xl font-black text-gray-900">{{ data.hadir }}</div><div class="text-xs text-gray-400 font-semibold">Tepat Waktu</div></div>
+  </div>
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
+    <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
+      <svg class="w-5 h-5 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+    </div>
+    <div><div class="text-2xl font-black text-gray-900">{{ data.terlambat }}</div><div class="text-xs text-gray-400 font-semibold">Terlambat</div></div>
+  </div>
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
+    <div class="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center flex-shrink-0">
+      <svg class="w-5 h-5 text-brand-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75Z"/></svg>
+    </div>
+    <div><div class="text-2xl font-black text-gray-900">{% if data.total > 0 %}{% widthratio data.hadir data.total 100 %}%{% else %}0%{% endif %}</div><div class="text-xs text-gray-400 font-semibold">Kehadiran</div></div>
+  </div>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+  <div class="flex items-center gap-3 px-5 py-4 border-b border-gray-100 bg-gray-50">
+    <svg class="w-5 h-5 text-brand-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+    <span class="font-bold text-gray-800">Detail Absensi — {{ month }}/{{ year }}</span>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[480px]">
+      <thead>
+        <tr class="border-b border-gray-100">
+          <th class="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-5 py-3 bg-gray-50">Tanggal</th>
+          <th class="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-4 py-3 bg-gray-50">Hari</th>
+          <th class="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-4 py-3 bg-gray-50">Masuk</th>
+          <th class="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-4 py-3 bg-gray-50">Keluar</th>
+          <th class="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-4 py-3 bg-gray-50">Durasi</th>
+          <th class="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-4 py-3 bg-gray-50">Status</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        {% for att in data.attendance_list %}
+        <tr class="transition-colors">
+          <td class="px-5 py-3 text-sm font-bold text-gray-800">{{ att.tanggal|date:"d M Y" }}</td>
+          <td class="px-4 py-3 text-sm text-gray-400">{{ att.tanggal|date:"l" }}</td>
+          <td class="px-4 py-3 text-sm font-mono font-bold {% if att.status == 'terlambat' %}text-amber-600{% else %}text-green-600{% endif %}">{{ att.jam_masuk|time:"H:i" }}</td>
+          <td class="px-4 py-3 text-sm font-mono text-gray-500">{{ att.jam_keluar|time:"H:i"|default:"—" }}</td>
+          <td class="px-4 py-3 text-sm text-gray-400">{{ att.durasi_kerja }}</td>
+          <td class="px-4 py-3">
+            {% if att.status == 'hadir' %}
+            <span class="inline-flex items-center gap-1 bg-green-50 text-green-700 border border-green-200 text-xs font-bold px-2.5 py-1 rounded-full">✓ Hadir</span>
+            {% else %}
+            <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200 text-xs font-bold px-2.5 py-1 rounded-full">⚠ Terlambat</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center py-10 text-gray-400 text-sm">Tidak ada data untuk periode ini</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endfor %}
+{% endif %}
+{% endblock %}

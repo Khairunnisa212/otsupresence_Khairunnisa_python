@@ -1,0 +1,591 @@
+{% extends 'base.html' %}
+{% block page_title %}Dashboard{% endblock %}
+{% block topbar_title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* video mirror */
+  #ci_video, #co_video { transform: scaleX(-1); }
+  /* modal backdrop */
+  .modal-bg { display:none; position:fixed; inset:0; z-index:60; background:rgba(0,0,0,.7); align-items:flex-end; justify-content:center; }
+  .modal-bg.open { display:flex; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if request.user.is_admin_role %}
+{# ══════════════════════════════════════════ ADMIN DASHBOARD ══════════════════════════════════════════ #}
+
+<!-- Stat cards -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+    <div class="flex items-center justify-between mb-3">
+      <div class="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center">
+        <svg class="w-5 h-5 text-brand-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"/></svg>
+      </div>
+    </div>
+    <div class="text-3xl font-black text-gray-900">{{ total_employees }}</div>
+    <div class="text-xs font-semibold text-gray-400 mt-0.5">Total Karyawan</div>
+  </div>
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+    <div class="flex items-center justify-between mb-3">
+      <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center">
+        <svg class="w-5 h-5 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+      </div>
+    </div>
+    <div class="text-3xl font-black text-gray-900">{{ hadir_today }}</div>
+    <div class="text-xs font-semibold text-gray-400 mt-0.5">Hadir Hari Ini</div>
+  </div>
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+    <div class="flex items-center justify-between mb-3">
+      <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+        <svg class="w-5 h-5 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+      </div>
+    </div>
+    <div class="text-3xl font-black text-gray-900">{{ terlambat_today }}</div>
+    <div class="text-xs font-semibold text-gray-400 mt-0.5">Terlambat Hari Ini</div>
+  </div>
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+    <div class="flex items-center justify-between mb-3">
+      <div class="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
+        <svg class="w-5 h-5 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+      </div>
+    </div>
+    <div class="text-3xl font-black text-gray-900">{{ tidak_hadir_today }}</div>
+    <div class="text-xs font-semibold text-gray-400 mt-0.5">Belum Absen</div>
+  </div>
+</div>
+
+<!-- Recent attendance table -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+  <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50">
+    <div class="flex items-center gap-3">
+      <svg class="w-5 h-5 text-brand-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+      <span class="font-bold text-gray-800">Absensi Hari Ini</span>
+    </div>
+    <a href="{% url 'attendance_list' %}" class="text-xs font-bold text-brand-700 hover:underline">Lihat Semua →</a>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[580px]">
+      <thead>
+        <tr class="border-b border-gray-100">
+          <th class="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-5 py-3 bg-gray-50">Karyawan</th>
+          <th class="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-4 py-3 bg-gray-50">Jam Masuk</th>
+          <th class="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-4 py-3 bg-gray-50">Jam Keluar</th>
+          <th class="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-4 py-3 bg-gray-50">Foto</th>
+          <th class="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-4 py-3 bg-gray-50">Lokasi</th>
+          <th class="text-left text-xs font-bold text-gray-400 uppercase tracking-wider px-4 py-3 bg-gray-50">Status</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        {% for att in recent_attendance %}
+        <tr class="transition-colors">
+          <td class="px-5 py-3.5">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-700 to-brand-500 flex items-center justify-center text-white font-bold text-xs flex-shrink-0 overflow-hidden">
+                {% if att.employee.foto %}<img src="{{ att.employee.foto.url }}" class="w-full h-full object-cover" alt="">{% else %}{{ att.employee.nama|first|upper }}{% endif %}
+              </div>
+              <div>
+                <div class="font-bold text-gray-800 text-sm">{{ att.employee.nama }}</div>
+                <div class="text-xs text-gray-400">{{ att.employee.jabatan }}</div>
+              </div>
+            </div>
+          </td>
+          <td class="px-4 py-3.5 font-mono text-sm font-bold {% if att.status == 'terlambat' %}text-amber-600{% else %}text-green-600{% endif %}">{{ att.jam_masuk|time:"H:i"|default:"—" }}</td>
+          <td class="px-4 py-3.5 font-mono text-sm text-gray-500">{{ att.jam_keluar|time:"H:i"|default:"—" }}</td>
+          <td class="px-4 py-3.5">
+            {% if att.foto_masuk %}
+            <a href="{{ att.foto_masuk.url }}" target="_blank">
+              <div class="w-9 h-9 rounded-xl overflow-hidden ring-2 ring-gray-100 hover:ring-brand-700 transition-all"><img src="{{ att.foto_masuk.url }}" class="w-full h-full object-cover" alt=""></div>
+            </a>
+            {% else %}
+            <div class="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center">
+              <svg class="w-4 h-4 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"/></svg>
+            </div>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3.5 text-xs text-gray-400 max-w-[120px] truncate" title="{{ att.lokasi_masuk }}">{{ att.lokasi_masuk|default:"—"|truncatechars:20 }}</td>
+          <td class="px-4 py-3.5">
+            {% if att.status == 'hadir' %}
+            <span class="inline-flex items-center gap-1 bg-green-50 text-green-700 border border-green-200 text-xs font-bold px-2.5 py-1 rounded-full">✓ Hadir</span>
+            {% else %}
+            <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200 text-xs font-bold px-2.5 py-1 rounded-full">⚠ Terlambat</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center py-12 text-gray-400">
+          <div class="text-3xl mb-2">📋</div>
+          <div class="text-sm font-medium">Belum ada absensi hari ini</div>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% else %}
+{# ══════════════════════════════════════════ EMPLOYEE DASHBOARD ══════════════════════════════════════════ #}
+
+<!-- Profile header -->
+<div class="rounded-3xl p-5 mb-4 relative overflow-hidden" style="background:linear-gradient(145deg,#003087 0%,#004BB4 55%,#0066CC 100%)">
+  <!-- decorative circles -->
+  <div class="absolute -top-8 -right-8 w-36 h-36 rounded-full bg-white/5"></div>
+  <div class="absolute top-4 -right-4 w-20 h-20 rounded-full bg-white/8"></div>
+
+  <!-- profile row -->
+  <div class="relative flex items-center gap-4 mb-5">
+    <div class="w-14 h-14 rounded-2xl border-2 border-white/30 bg-white/20 flex items-center justify-center text-white font-black text-xl overflow-hidden flex-shrink-0">
+      {% if employee.foto %}<img src="{{ employee.foto.url }}" class="w-full h-full object-cover" alt="">
+      {% else %}{{ user.first_name|first|default:user.username|first|upper }}{% endif %}
+    </div>
+    <div class="flex-1 min-w-0">
+      <div class="text-white font-black text-lg leading-tight truncate">{{ user.get_full_name|default:user.username }}</div>
+      <div class="text-white/60 text-sm mt-0.5">{{ employee.jabatan|default:"Karyawan" }}</div>
+      <div class="flex items-center gap-1.5 mt-1.5">
+        <span class="w-2 h-2 rounded-full bg-green-400 anim-pulse"></span>
+        <span class="text-white/70 text-xs font-semibold">{{ employee.departemen|default:"PT Otsuka Indonesia" }}</span>
+      </div>
+    </div>
+    <div class="text-right flex-shrink-0">
+      <div id="live-clock" class="text-white font-mono font-bold text-lg tabular-nums"></div>
+      <div class="text-white/50 text-xs mt-0.5">{{ today|date:"d M Y" }}</div>
+    </div>
+  </div>
+
+  <!-- Stats strip -->
+  <div class="grid grid-cols-3 gap-2">
+    <div class="bg-white/10 rounded-2xl p-3 text-center backdrop-blur-sm">
+      <div class="text-white font-black text-2xl font-mono">{{ tepat_waktu }}</div>
+      <div class="text-white/55 text-[10px] font-bold uppercase tracking-wide mt-0.5">Ontime</div>
+    </div>
+    <div class="bg-white/10 rounded-2xl p-3 text-center backdrop-blur-sm">
+      <div class="text-white font-black text-2xl font-mono">{{ total_hadir }}</div>
+      <div class="text-white/55 text-[10px] font-bold uppercase tracking-wide mt-0.5">Total</div>
+    </div>
+    <div class="bg-white/10 rounded-2xl p-3 text-center backdrop-blur-sm">
+      <div class="text-white font-black text-2xl font-mono">{{ terlambat_count }}</div>
+      <div class="text-white/55 text-[10px] font-bold uppercase tracking-wide mt-0.5">Terlambat</div>
+    </div>
+  </div>
+</div>
+
+<!-- Today status card -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4">
+  <div class="flex items-center justify-between mb-3">
+    <div>
+      <div class="text-xs font-bold text-gray-400 uppercase tracking-wide">Kehadiran Hari Ini</div>
+      <div class="text-sm font-bold text-gray-700 mt-0.5">{{ today|date:"l, d MMMM Y"|default:today }}</div>
+    </div>
+    {% if today_attendance %}
+      {% if today_attendance.jam_keluar %}
+      <span class="bg-gray-100 text-gray-500 text-xs font-bold px-3 py-1.5 rounded-full">✓ Selesai</span>
+      {% else %}
+      <span class="bg-green-50 text-green-700 border border-green-200 text-xs font-bold px-3 py-1.5 rounded-full anim-pulse">● Sedang Bekerja</span>
+      {% endif %}
+    {% else %}
+      <span class="bg-amber-50 text-amber-700 border border-amber-200 text-xs font-bold px-3 py-1.5 rounded-full">○ Belum Absen</span>
+    {% endif %}
+  </div>
+
+  <div class="grid grid-cols-2 gap-3 mb-4">
+    <div class="bg-gray-50 rounded-xl p-3">
+      <div class="text-xs text-gray-400 font-semibold mb-1">Jam Masuk</div>
+      <div class="font-mono font-black text-xl {% if today_attendance %}{% if today_attendance.status == 'terlambat' %}text-amber-600{% else %}text-green-600{% endif %}{% else %}text-gray-300{% endif %}">
+        {{ today_attendance.jam_masuk|time:"H:i"|default:"--:--" }}
+      </div>
+      {% if today_attendance and today_attendance.status == 'terlambat' %}
+      <div class="text-amber-500 text-xs font-bold mt-1">⚠ Terlambat</div>
+      {% elif today_attendance %}
+      <div class="text-green-500 text-xs font-bold mt-1">✓ Tepat Waktu</div>
+      {% endif %}
+    </div>
+    <div class="bg-gray-50 rounded-xl p-3">
+      <div class="text-xs text-gray-400 font-semibold mb-1">Jam Keluar</div>
+      <div class="font-mono font-black text-xl text-gray-{% if today_attendance and today_attendance.jam_keluar %}700{% else %}300{% endif %}">
+        {{ today_attendance.jam_keluar|time:"H:i"|default:"--:--" }}
+      </div>
+      {% if today_attendance and today_attendance.jam_keluar %}
+      <div class="text-gray-400 text-xs font-semibold mt-1">Durasi: {{ today_attendance.durasi_kerja }}</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Checkin/checkout buttons -->
+  {% if not today_attendance %}
+  <button onclick="openCIModal()"
+          class="w-full flex items-center justify-center gap-2.5 bg-brand-700 hover:bg-brand-600 active:scale-[.98] text-white font-extrabold py-4 rounded-2xl transition-all shadow-lg shadow-brand-700/25">
+    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z"/></svg>
+    Check In Sekarang
+  </button>
+  {% elif not today_attendance.jam_keluar %}
+  <button onclick="openCOModal()"
+          class="w-full flex items-center justify-center gap-2.5 bg-red-500 hover:bg-red-600 active:scale-[.98] text-white font-extrabold py-4 rounded-2xl transition-all shadow-lg shadow-red-500/25">
+    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z"/></svg>
+    Check Out Sekarang
+  </button>
+  {% else %}
+  <div class="w-full flex items-center justify-center gap-2 bg-gray-100 text-gray-400 font-bold py-4 rounded-2xl">
+    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+    Absensi Hari Ini Selesai
+  </div>
+  {% endif %}
+</div>
+
+<!-- Recent history -->
+{% if recent_attendance %}
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-4">
+  <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+    <span class="font-bold text-gray-800 text-sm">Riwayat Terakhir</span>
+    <a href="{% url 'attendance_list' %}" class="text-xs font-bold text-brand-700 hover:underline">Lihat Semua →</a>
+  </div>
+  <div class="divide-y divide-gray-50">
+    {% for att in recent_attendance %}
+    <div class="flex items-center gap-3 px-5 py-3.5">
+      <div class="w-9 h-9 rounded-xl {% if att.status == 'hadir' %}bg-green-50{% else %}bg-amber-50{% endif %} flex items-center justify-center flex-shrink-0">
+        {% if att.status == 'hadir' %}
+        <svg class="w-4 h-4 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+        {% else %}
+        <svg class="w-4 h-4 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+        {% endif %}
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-bold text-gray-800">{{ att.tanggal|date:"d M Y" }}</div>
+        <div class="text-xs text-gray-400 mt-0.5 font-mono">{{ att.jam_masuk|time:"H:i" }}{% if att.jam_keluar %} — {{ att.jam_keluar|time:"H:i" }}{% endif %}</div>
+      </div>
+      {% if att.foto_masuk %}
+      <a href="{{ att.foto_masuk.url }}" target="_blank">
+        <div class="w-9 h-9 rounded-xl overflow-hidden ring-2 ring-gray-100 hover:ring-brand-700 transition-all flex-shrink-0">
+          <img src="{{ att.foto_masuk.url }}" class="w-full h-full object-cover" alt="">
+        </div>
+      </a>
+      {% endif %}
+      {% if att.lokasi_masuk %}
+      <div class="text-xs text-gray-400 hidden sm:block max-w-[100px] truncate" title="{{ att.lokasi_masuk }}">{{ att.lokasi_masuk|truncatechars:16 }}</div>
+      {% endif %}
+      <span class="flex-shrink-0 text-xs font-bold px-2 py-1 rounded-full {% if att.status == 'hadir' %}bg-green-50 text-green-700{% else %}bg-amber-50 text-amber-700{% endif %}">
+        {{ att.get_status_display }}
+      </span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{# ──── CHECK-IN MODAL ──── #}
+<div id="ciModalBg" class="modal-bg" onclick="closeCIModal(event)">
+  <div class="w-full max-w-sm bg-white rounded-t-3xl shadow-2xl anim-slideup" onclick="event.stopPropagation()">
+    <!-- handle -->
+    <div class="flex justify-center pt-3 pb-2"><div class="w-10 h-1.5 bg-gray-200 rounded-full"></div></div>
+    <!-- header -->
+    <div class="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+      <div>
+        <div class="font-extrabold text-gray-900">Check In</div>
+        <div class="text-xs text-gray-400 mt-0.5">Selfie + lokasi otomatis</div>
+      </div>
+      <button onclick="closeCIModal()" class="w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition-colors">
+        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form method="post" action="{% url 'check_in' %}" enctype="multipart/form-data" id="ciForm">
+      {% csrf_token %}
+      <input type="hidden" name="lokasi_masuk" id="ci_lokasi" value="Kantor Pusat">
+      <input type="hidden" name="latitude_masuk" id="ci_lat">
+      <input type="hidden" name="longitude_masuk" id="ci_lng">
+      <input type="file" name="foto_masuk" id="ci_fotoInput" accept="image/*" class="hidden">
+
+      <div class="px-5 py-4 space-y-4">
+        <!-- Camera area -->
+        <div id="ci_cameraArea" class="relative rounded-2xl overflow-hidden bg-gray-900" style="aspect-ratio:3/4">
+          <video id="ci_video" autoplay playsinline class="w-full h-full object-cover"></video>
+          <!-- guide ring -->
+          <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div class="w-32 h-32 rounded-full border-2 border-white/40 border-dashed"></div>
+          </div>
+          <!-- timestamp -->
+          <div class="absolute bottom-3 left-3 right-3 bg-black/50 rounded-xl px-3 py-1.5 text-center">
+            <span class="text-white text-xs font-mono font-bold" id="live-clock2"></span>
+          </div>
+        </div>
+        <!-- Preview area (hidden initially) -->
+        <div id="ci_preview" class="hidden">
+          <div class="relative rounded-2xl overflow-hidden" style="aspect-ratio:3/4">
+            <img id="ci_previewImg" class="w-full h-full object-cover" alt="">
+          </div>
+          <div class="text-center text-xs text-gray-400 mt-1.5 font-mono" id="ci_timestamp"></div>
+        </div>
+
+        <!-- GPS card -->
+        <div class="bg-gray-50 rounded-2xl p-3 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-brand-700 anim-bounce" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-xs font-bold text-gray-500 uppercase tracking-wide">Lokasi GPS</div>
+            <div class="text-sm font-bold text-gray-800 truncate mt-0.5" id="ci_locName">Mendeteksi...</div>
+            <div class="text-xs text-gray-400" id="ci_locAddr"></div>
+          </div>
+          <span id="ci_locBadge" class="text-xs font-bold px-2 py-1 rounded-full bg-amber-50 text-amber-600">⏳ GPS</span>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="px-5 pb-6 flex gap-2.5" id="ci_camBtns">
+        <button type="button" onclick="ci_capture()"
+                class="flex-1 flex items-center justify-center gap-2 bg-brand-700 hover:bg-brand-600 text-white font-bold py-3.5 rounded-2xl transition-colors shadow-sm">
+          <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z"/></svg>
+          Ambil Foto
+        </button>
+        <button type="button" onclick="closeCIModal()" class="px-5 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-2xl transition-colors">Batal</button>
+      </div>
+
+      <div class="px-5 pb-6 hidden" id="ci_submitArea">
+        <button type="submit" id="ci_submitBtn" disabled
+                class="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-200 disabled:text-gray-400 text-white font-extrabold py-4 rounded-2xl transition-all shadow-sm">
+          <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+          Konfirmasi Check In
+        </button>
+      </div>
+    </form>
+    <canvas id="ci_canvas" class="hidden"></canvas>
+  </div>
+</div>
+
+{# ──── CHECK-OUT MODAL ──── #}
+<div id="coModalBg" class="modal-bg" onclick="closeCOModal(event)">
+  <div class="w-full max-w-sm bg-white rounded-t-3xl shadow-2xl anim-slideup" onclick="event.stopPropagation()">
+    <div class="flex justify-center pt-3 pb-2"><div class="w-10 h-1.5 bg-gray-200 rounded-full"></div></div>
+    <div class="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+      <div>
+        <div class="font-extrabold text-gray-900">Check Out</div>
+        <div class="text-xs text-gray-400 mt-0.5">Selfie + lokasi otomatis</div>
+      </div>
+      <button onclick="closeCOModal()" class="w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition-colors">
+        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form method="post" action="{% url 'check_out' %}" enctype="multipart/form-data" id="coForm">
+      {% csrf_token %}
+      <input type="hidden" name="lokasi_keluar" id="co_lokasi" value="Kantor Pusat">
+      <input type="hidden" name="latitude_keluar" id="co_lat">
+      <input type="hidden" name="longitude_keluar" id="co_lng">
+      <input type="file" name="foto_keluar" id="co_fotoInput" accept="image/*" class="hidden">
+
+      <div class="px-5 py-4 space-y-4">
+        <div id="co_cameraArea" class="relative rounded-2xl overflow-hidden bg-gray-900" style="aspect-ratio:3/4">
+          <video id="co_video" autoplay playsinline class="w-full h-full object-cover"></video>
+          <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div class="w-32 h-32 rounded-full border-2 border-red-400/50 border-dashed"></div>
+          </div>
+          <!-- CHECK OUT badge -->
+          <div class="absolute top-3 left-3 bg-red-500 text-white text-xs font-extrabold px-3 py-1 rounded-full tracking-wide">CHECK OUT</div>
+          <div class="absolute bottom-3 left-3 right-3 bg-black/50 rounded-xl px-3 py-1.5 text-center">
+            <span class="text-white text-xs font-mono font-bold" id="co_clock"></span>
+          </div>
+        </div>
+        <div id="co_preview" class="hidden">
+          <div class="relative rounded-2xl overflow-hidden" style="aspect-ratio:3/4">
+            <img id="co_previewImg" class="w-full h-full object-cover" alt="">
+          </div>
+          <div class="text-center text-xs text-gray-400 mt-1.5 font-mono" id="co_timestamp"></div>
+        </div>
+
+        <!-- GPS + check-in ref -->
+        <div class="bg-gray-50 rounded-2xl p-3 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-red-500 anim-bounce" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-xs font-bold text-gray-500 uppercase tracking-wide">Lokasi Keluar</div>
+            <div class="text-sm font-bold text-gray-800 truncate mt-0.5" id="co_locName">Mendeteksi...</div>
+            <div class="text-xs text-gray-400">Check-in: {{ today_attendance.jam_masuk|time:"H:i"|default:"--:--" }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-5 pb-6 flex gap-2.5" id="co_camBtns">
+        <button type="button" onclick="co_capture()"
+                class="flex-1 flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white font-bold py-3.5 rounded-2xl transition-colors shadow-sm">
+          <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z"/></svg>
+          Ambil Foto
+        </button>
+        <button type="button" onclick="closeCOModal()" class="px-5 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-2xl transition-colors">Batal</button>
+      </div>
+
+      <div class="px-5 pb-6 hidden" id="co_submitArea">
+        <button type="submit" id="co_submitBtn" disabled
+                class="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 disabled:bg-gray-200 disabled:text-gray-400 text-white font-extrabold py-4 rounded-2xl transition-all shadow-sm">
+          <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+          Konfirmasi Check Out
+        </button>
+      </div>
+    </form>
+    <canvas id="co_canvas" class="hidden"></canvas>
+  </div>
+</div>
+
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// sync secondary clocks
+setInterval(()=>{
+  const t = new Date().toLocaleTimeString('id-ID');
+  ['live-clock2','co_clock'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=t; });
+}, 1000);
+
+// ── MODAL CONTROLS ──
+function openCIModal(){
+  document.getElementById('ciModalBg').classList.add('open');
+  document.body.style.overflow='hidden';
+  ci_startCamera(); ci_getGPS();
+}
+function closeCIModal(e){
+  if(e && e.target!==document.getElementById('ciModalBg')) return;
+  document.getElementById('ciModalBg').classList.remove('open');
+  document.body.style.overflow='';
+  ci_stopCamera();
+}
+function openCOModal(){
+  document.getElementById('coModalBg').classList.add('open');
+  document.body.style.overflow='hidden';
+  co_startCamera(); co_getGPS();
+}
+function closeCOModal(e){
+  if(e && e.target!==document.getElementById('coModalBg')) return;
+  document.getElementById('coModalBg').classList.remove('open');
+  document.body.style.overflow='';
+  co_stopCamera();
+}
+
+// ── CHECK-IN ──
+let ciStream = null;
+async function ci_startCamera(){
+  try {
+    ciStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false});
+    document.getElementById('ci_video').srcObject = ciStream;
+  } catch(e){ console.warn('Camera:',e); }
+}
+function ci_stopCamera(){ if(ciStream){ ciStream.getTracks().forEach(t=>t.stop()); ciStream=null; } }
+function ci_capture(){
+  const v=document.getElementById('ci_video'), c=document.getElementById('ci_canvas');
+  c.width=v.videoWidth||640; c.height=v.videoHeight||480;
+  const ctx=c.getContext('2d');
+  ctx.save(); ctx.scale(-1,1); ctx.drawImage(v,-c.width,0); ctx.restore();
+  ctx.fillStyle='rgba(0,0,0,.55)'; ctx.fillRect(0,c.height-36,c.width,36);
+  ctx.fillStyle='#fff'; ctx.font='bold 12px monospace'; ctx.textAlign='left';
+  ctx.fillText(new Date().toLocaleString('id-ID'),10,c.height-10);
+  ctx.textAlign='right'; ctx.fillText('OtsuPresence Check-In',c.width-10,c.height-10);
+  document.getElementById('ci_previewImg').src=c.toDataURL('image/jpeg',.9);
+  document.getElementById('ci_timestamp').textContent=new Date().toLocaleString('id-ID')+' · OtsuPresence';
+  document.getElementById('ci_cameraArea').style.display='none';
+  document.getElementById('ci_preview').classList.remove('hidden');
+  document.getElementById('ci_camBtns').innerHTML=`
+    <button type="button" onclick="ci_retake()" class="flex-1 flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3.5 rounded-2xl transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+      Ulang Foto
+    </button>`;
+  c.toBlob(blob=>{ const f=new File([blob],'foto_masuk.jpg',{type:'image/jpeg'}); const dt=new DataTransfer(); dt.items.add(f); document.getElementById('ci_fotoInput').files=dt.files; },'image/jpeg',.9);
+  ci_stopCamera();
+  document.getElementById('ci_submitArea').classList.remove('hidden');
+  document.getElementById('ci_submitBtn').disabled=false;
+}
+function ci_retake(){
+  document.getElementById('ci_cameraArea').style.display='block';
+  document.getElementById('ci_preview').classList.add('hidden');
+  document.getElementById('ci_submitArea').classList.add('hidden');
+  document.getElementById('ci_camBtns').innerHTML=`
+    <button type="button" onclick="ci_capture()" class="flex-1 flex items-center justify-center gap-2 bg-brand-700 text-white font-bold py-3.5 rounded-2xl">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z"/></svg>
+      Ambil Foto
+    </button>
+    <button type="button" onclick="closeCIModal()" class="px-5 bg-gray-100 text-gray-600 font-bold rounded-2xl">Batal</button>`;
+  ci_startCamera();
+}
+function ci_getGPS(){
+  if(!navigator.geolocation){ ci_setLoc('Kantor Pusat','GPS tidak tersedia',false); return; }
+  navigator.geolocation.getCurrentPosition(pos=>{
+    document.getElementById('ci_lat').value=pos.coords.latitude;
+    document.getElementById('ci_lng').value=pos.coords.longitude;
+    ci_setLoc('Lokasi Terdeteksi',pos.coords.latitude.toFixed(5)+', '+pos.coords.longitude.toFixed(5),true);
+    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`)
+      .then(r=>r.json()).then(d=>{
+        const name=d.address?.road||d.address?.suburb||d.address?.city||'Lokasi';
+        const city=d.address?.city||d.address?.town||d.address?.state||'';
+        ci_setLoc(name,city,true);
+        document.getElementById('ci_lokasi').value=name+(city?', '+city:'');
+      }).catch(()=>{});
+  },()=>{ ci_setLoc('Kantor Pusat','GPS tidak tersedia',false); document.getElementById('ci_lokasi').value='Kantor Pusat'; },{timeout:8000,enableHighAccuracy:true});
+}
+function ci_setLoc(name,addr,ok){
+  document.getElementById('ci_locName').textContent=name;
+  document.getElementById('ci_locAddr').textContent=addr;
+  const b=document.getElementById('ci_locBadge');
+  b.textContent=ok?'✓ Terdeteksi':'⚠ Manual';
+  b.className='text-xs font-bold px-2 py-1 rounded-full '+(ok?'bg-green-50 text-green-600':'bg-amber-50 text-amber-600');
+}
+
+// ── CHECK-OUT ──
+let coStream = null;
+async function co_startCamera(){
+  try {
+    coStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false});
+    document.getElementById('co_video').srcObject=coStream;
+  } catch(e){ console.warn('Camera:',e); }
+}
+function co_stopCamera(){ if(coStream){ coStream.getTracks().forEach(t=>t.stop()); coStream=null; } }
+function co_capture(){
+  const v=document.getElementById('co_video'), c=document.getElementById('co_canvas');
+  c.width=v.videoWidth||640; c.height=v.videoHeight||480;
+  const ctx=c.getContext('2d');
+  ctx.save(); ctx.scale(-1,1); ctx.drawImage(v,-c.width,0); ctx.restore();
+  ctx.fillStyle='rgba(0,0,0,.55)'; ctx.fillRect(0,c.height-36,c.width,36);
+  ctx.fillStyle='#fff'; ctx.font='bold 12px monospace'; ctx.textAlign='left';
+  ctx.fillText(new Date().toLocaleString('id-ID'),10,c.height-10);
+  ctx.textAlign='right'; ctx.fillText('OtsuPresence Check-Out',c.width-10,c.height-10);
+  document.getElementById('co_previewImg').src=c.toDataURL('image/jpeg',.9);
+  document.getElementById('co_timestamp').textContent=new Date().toLocaleString('id-ID')+' · OtsuPresence';
+  document.getElementById('co_cameraArea').style.display='none';
+  document.getElementById('co_preview').classList.remove('hidden');
+  document.getElementById('co_camBtns').innerHTML=`
+    <button type="button" onclick="co_retake()" class="flex-1 flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3.5 rounded-2xl transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+      Ulang Foto
+    </button>`;
+  c.toBlob(blob=>{ const f=new File([blob],'foto_keluar.jpg',{type:'image/jpeg'}); const dt=new DataTransfer(); dt.items.add(f); document.getElementById('co_fotoInput').files=dt.files; },'image/jpeg',.9);
+  co_stopCamera();
+  document.getElementById('co_submitArea').classList.remove('hidden');
+  document.getElementById('co_submitBtn').disabled=false;
+}
+function co_retake(){
+  document.getElementById('co_cameraArea').style.display='block';
+  document.getElementById('co_preview').classList.add('hidden');
+  document.getElementById('co_submitArea').classList.add('hidden');
+  document.getElementById('co_camBtns').innerHTML=`
+    <button type="button" onclick="co_capture()" class="flex-1 flex items-center justify-center gap-2 bg-red-500 text-white font-bold py-3.5 rounded-2xl">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z"/></svg>
+      Ambil Foto
+    </button>
+    <button type="button" onclick="closeCOModal()" class="px-5 bg-gray-100 text-gray-600 font-bold rounded-2xl">Batal</button>`;
+  co_startCamera();
+}
+function co_getGPS(){
+  if(!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(pos=>{
+    document.getElementById('co_lat').value=pos.coords.latitude;
+    document.getElementById('co_lng').value=pos.coords.longitude;
+    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`)
+      .then(r=>r.json()).then(d=>{
+        const name=d.address?.road||d.address?.suburb||d.address?.city||'Lokasi';
+        const city=d.address?.city||d.address?.town||d.address?.state||'';
+        document.getElementById('co_lokasi').value=name+(city?', '+city:'');
+        document.getElementById('co_locName').textContent=name;
+      }).catch(()=>{});
+  },()=>{},{timeout:8000,enableHighAccuracy:true});
+}
+</script>
+{% endblock %}
